@@ -18,7 +18,7 @@
             <param name="id">The unique id quote</param>
             <returns></returns>
         </member>
-        <member name="M:BookStore.Controllers.QuotesController.PagingQuote(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+        <member name="M:BookStore.Controllers.QuotesController.paging(System.Nullable{System.Int32},System.Nullable{System.Int32})">
             <summary>
             pagination quotes
             </summary>
@@ -26,7 +26,7 @@
             <param name="pageSize">The record in a page</param>
             <returns></returns>
         </member>
-        <member name="M:BookStore.Controllers.QuotesController.SearchQuote(System.String)">
+        <member name="M:BookStore.Controllers.QuotesController.search(System.String)">
             <summary>
             search quote by type
             </summary>

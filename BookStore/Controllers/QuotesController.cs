@@ -31,7 +31,7 @@ namespace BookStore.Controllers
         /// <param name="sort">Sort by Title</param>
         /// <returns></returns>
         [HttpGet]
-        public IActionResult Get(string sort)
+        public ActionResult<Quote> Get(string sort)
         {
             IEnumerable<Quote> quotes;
 
@@ -81,7 +81,7 @@ namespace BookStore.Controllers
         /// <param name="pageSize">The record in a page</param>
         /// <returns></returns>
         [HttpGet("[action]")]
-        public IActionResult PagingQuote(int? pageNumber, int? pageSize)
+        public IActionResult paging(int? pageNumber, int? pageSize)
         {
             var currentPageNumber = pageNumber ?? 1;
             var currentPageSize = pageSize ?? 5;
@@ -94,9 +94,10 @@ namespace BookStore.Controllers
         /// </summary>
         /// <param name="type"></param>
         /// <returns>the quote is searching</returns>
+       // GET: api/Quotes/search?type=th
         [HttpGet]
         [Route("[action]")]
-        public IActionResult SearchQuote(string type)
+        public IActionResult search(string type)
         {
             var quotes = _quoteDbContext.Quotes.Where(q => q.Type.Contains(type));
             if (quotes == null)
@@ -104,10 +105,6 @@ namespace BookStore.Controllers
                 return NotFound();
             }
             if (type == null)
-            {
-                return NotFound();
-            }
-            if (quotes.ToString() != type)
             {
                 return NotFound();
             }
