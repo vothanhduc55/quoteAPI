@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>BookStore</name>
+    </assembly>
+    <members>
+        <member name="M:BookStore.Controllers.QuotesController.Get(System.String)">
+            <summary>
+            Get all quotes
+            </summary>
+            <param name="sort">Sort by Title</param>
+            <returns></returns>
+        </member>
+        <member name="M:BookStore.Controllers.QuotesController.Get(System.Int32)">
+            <summary>
+            Get quote by id
+            </summary>
+            <param name="id">The unique id quote</param>
+            <returns></returns>
+        </member>
+        <member name="M:BookStore.Controllers.QuotesController.PagingQuote(System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            pagination quotes
+            </summary>
+            <param name="pageNumber">The number page</param>
+            <param name="pageSize">The record in a page</param>
+            <returns></returns>
+        </member>
+        <member name="M:BookStore.Controllers.QuotesController.SearchQuote(System.String)">
+            <summary>
+            search quote by type
+            </summary>
+            <param name="type"></param>
+            <returns>the quote is searching</returns>
+        </member>
+        <member name="M:BookStore.Controllers.QuotesController.Post(BookStore.Models.Quote)">
+             <summary>
+             Create a quote
+             </summary>
+             <param name="quote"></param>
+             <remarks>
+             Id is a database-generated identity so it should never be include in INSERT
+            
+             Example :
+             {
+                 "title": "some title",
+                 "decsription": "some decsciption",
+                  "author": "some author",
+                 "type": "some type"
+             }
+             </remarks>
+             <returns></returns>
+        </member>
+        <member name="M:BookStore.Controllers.QuotesController.Put(System.Int32,BookStore.Models.Quote)">
+            <summary>
+            update quote
+            </summary>
+            <param name="id"></param>
+            <param name="quote"></param>
+            <returns></returns>
+        </member>
+        <member name="M:BookStore.Controllers.QuotesController.Delete(System.Int32)">
+            <summary>
+            Detele a quote
+            </summary>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>
