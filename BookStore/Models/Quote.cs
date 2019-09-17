@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using BookStore.Hateoas;
+using FluentValidation;
 using System;
 
 namespace BookStore.Models

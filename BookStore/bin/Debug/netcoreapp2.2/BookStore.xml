@@ -4,11 +4,10 @@
         <name>BookStore</name>
     </assembly>
     <members>
-        <member name="M:BookStore.Controllers.QuotesController.Get(System.String)">
+        <member name="M:BookStore.Controllers.QuotesController.GetQuotes(System.String)">
             <summary>
             Get all quotes
             </summary>
-            <param name="sort">Sort by Title</param>
             <returns></returns>
         </member>
         <member name="M:BookStore.Controllers.QuotesController.Get(System.Int32)">

@@ -1,6 +1,8 @@
-﻿namespace BookStore.DTO
+﻿using BookStore.Hateoas;
+
+namespace BookStore.DTO
 {
-    public class QuoteDTO
+    public class QuoteDTO : LinkResourceBase
     {
         public int Id { get; set; }
         public string Title { get; set; }

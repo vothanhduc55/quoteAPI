@@ -1,19 +1,24 @@
 ﻿using AutoMapper;
 using BookStore.Data;
+using BookStore.Interfaces;
 using BookStore.Mappings;
+using BookStore.Repositories;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi.Models;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-
 namespace BookStore
 {
     public class Startup
@@ -28,10 +33,30 @@ namespace BookStore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Startup>());
+            services.AddMvc(options =>
+            {
+                options.ReturnHttpNotAcceptable = true;
+                options.EnableEndpointRouting = false;
+            })
+            .SetCompatibilityVersion(CompatibilityVersion.Version_2_2).AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<Startup>());
 
-            Mapper.Initialize(cfg => cfg.AddProfile<SimpleMapping>());
+            Mapper.Initialize(cfg =>
+            {
+                cfg.AddProfile<SimpleMapping>();
+                //cfg.ValidateInlineMaps = false;
+            });
+           
+
             services.AddAutoMapper();
+
+            services.AddScoped<IQuoteRepository, QuoteRepostitory>();
+
+            services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddScoped<IUrlHelper>(factory =>
+            {
+                var actionContext = factory.GetService<IActionContextAccessor>().ActionContext;
+                return new UrlHelper(actionContext);
+            });
 
             services.AddDbContext<QuotesDbContext>(option => option.UseSqlServer(@"Data Source=DESKTOP-M3JMV98;Initial Catalog=QuotesDB;Integrated Security=True"));
 
@@ -68,7 +93,11 @@ namespace BookStore
                         Url = new Uri("https://example.com/license"),
                     }
                 });
+
+
+                c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());      
                 // Set the comments path for the Swagger JSON and UI.
+
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
@@ -99,7 +128,7 @@ namespace BookStore
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                //c.RoutePrefix = string.Empty;
+                c.RoutePrefix = string.Empty;
             });
 
             app.UseMvc();

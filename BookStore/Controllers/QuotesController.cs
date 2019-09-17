@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using BookStore.Data;
 using BookStore.DTO;
+using BookStore.Hateoas;
+using BookStore.Interfaces;
 using BookStore.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,40 +18,46 @@ namespace BookStore.Controllers
     {
         private QuotesDbContext _quoteDbContext;
         private IMapper _mapper;
+        private IUrlHelper _urlHelper;
+        private IQuoteRepository _quoteRepository;
+        private IUnitofWork _UnitOfWork;
 
-        public QuotesController(QuotesDbContext quotesDbContext, IMapper mapper)
+        public QuotesController(QuotesDbContext quotesDbContext, IMapper mapper, IUrlHelper urlHelper, IQuoteRepository quoteRepository)
         {
             _quoteDbContext = quotesDbContext;
             _mapper = mapper;
+            _urlHelper = urlHelper;
+            _quoteRepository = quoteRepository;
         }
 
         /// <summary>
         /// Get all quotes
         /// </summary>
-        /// <param name="sort">Sort by Title</param>
         /// <returns></returns>
-        [HttpGet]
-        public ActionResult<Quote> Get(string sort)
+        [HttpGet(Name = "GetQuotes")]
+        public ActionResult<Quote> GetQuotes(string sort)
         {
-            IEnumerable<Quote> quotes;
+            //var quoteDTO = _mapper.Map<IEnumerable<QuoteDTO>, IEnumerable<Quote>>(quotes);
+            var quotes = _quoteRepository.GetQuotes();
 
-            //var quoteDTO = _mapper.Map<QuoteDTO>(quote);
-            var quoteDTO = _quoteDbContext.Quotes.ProjectTo<QuoteDTO>(_mapper.ConfigurationProvider).ToList();
             switch (sort)
             {
                 case "desc":
-                    quotes = _quoteDbContext.Quotes.OrderByDescending(q => q.Title);
+                    quotes = _quoteDbContext.Quotes.OrderByDescending(q => q.Type);
                     break;
 
                 case "asc":
-                    quotes = _quoteDbContext.Quotes.OrderBy(q => q.Title);
+                    quotes = _quoteDbContext.Quotes.OrderBy(q => q.Type);
                     break;
 
                 default:
                     quotes = _quoteDbContext.Quotes;
                     break;
             }
-            return Ok(quoteDTO);
+            var quotesDto = _mapper.Map<IEnumerable<QuoteDTO>>(quotes);
+            var wrapper = new LinkCollectionResourceBase<QuoteDTO>(quotesDto);
+            return Ok(CreateLinkforQuotes(wrapper));
+            //return Ok(quotesDto);
         }
 
         /// <summary>
@@ -60,17 +66,18 @@ namespace BookStore.Controllers
         /// <param name="id">The unique id quote</param>
         /// <returns></returns>
         // GET: api/Quotes/5
-        [HttpGet("{id}", Name = "Get")]
+        [HttpGet("{id}", Name = "GetQuoteById")]
         public IActionResult Get(int id)
         {
-            var quote = _quoteDbContext.Quotes.Find(id);
-            if (quote == null)
+            var quote = _quoteRepository.GetQuoteById(id);
+            var quoteDto = _mapper.Map<QuoteDTO>(quote);
+            if (quoteDto == null)
             {
                 return NotFound("Not found id...");
             }
             else
             {
-                return Ok(quote);
+                return Ok(CreateLinkforQuote(quoteDto));
             }
         }
 
@@ -131,14 +138,14 @@ namespace BookStore.Controllers
         /// </remarks>
         /// <returns></returns>
         // POST: api/Quotes
-        [HttpPost]
+        [HttpPost(Name = "PostQuote")]
         public IActionResult Post([FromBody] Quote quote)
         {
             //string userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
             //quote.UserId = userId;
-            quote.CreateAt = DateTime.Now;
-            _quoteDbContext.Quotes.Add(quote);
-            _quoteDbContext.SaveChanges();
+
+            _quoteRepository.addQuote(quote);
+
             return StatusCode(StatusCodes.Status201Created);
         }
 
@@ -149,7 +156,7 @@ namespace BookStore.Controllers
         /// <param name="quote"></param>
         /// <returns></returns>
         // PUT: api/Quotes/5
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "Update_Quote")]
         public IActionResult Put(int id, [FromBody] Quote quote)
         {
             //string userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
@@ -181,21 +188,56 @@ namespace BookStore.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
+        // DELETE: api/Quotes/5
+        [HttpDelete("{id}", Name = "Delete_Quote")]
         public IActionResult Delete(int id)
         {
-            var quote = _quoteDbContext.Quotes.Find(id);
+            var quote = _quoteRepository.GetQuoteById(id);
             if (quote == null)
             {
                 return NotFound("No record found against this id");
             }
             else
             {
-                _quoteDbContext.Remove(quote);
+                _quoteRepository.deleteQuote(quote);
                 _quoteDbContext.SaveChanges();
                 return Ok("Delete record successfully");
             }
+        }
+
+        private QuoteDTO CreateLinkforQuote(QuoteDTO quoteDto)
+        {
+            //var t = new {
+            //    id = quoteDto.Id
+            //};
+            //var a = _urlHelper.Link("GetQuoteById", t);
+
+            //if(quoteDto.Links.Count <0)
+            quoteDto.Links.Add(new LinkResource(
+                href: _urlHelper.Link("GetquoteById", new { id = quoteDto.Id }),
+                rel: "Self",
+                method: "GET"));
+            quoteDto.Links.Add(new LinkResource(
+                href: _urlHelper.Link("Update_Quote", new { id = quoteDto.Id }),
+                rel: "Change a quote",
+                method: "PUT"));
+            quoteDto.Links.Add(new LinkResource(
+                href: _urlHelper.Link("Delete_Quote", new { id = quoteDto.Id }),
+                rel: "Delete a quote",
+                method: "DELETE"));
+            return quoteDto;
+        }
+
+        private LinkCollectionResourceBase<QuoteDTO> CreateLinkforQuotes(
+           LinkCollectionResourceBase<QuoteDTO> quoteWrapper)
+        {
+            quoteWrapper.Links.Add(
+                new LinkResource(
+                    href: _urlHelper.Link("GetQuoteById", null),
+                    rel: "self",
+                    method: "GET"));
+
+            return quoteWrapper;
         }
     }
 }
